@@ -202,16 +202,16 @@ func (ctx *NixContext) EvalHosts(deploymentPath string, attr string) (string, er
 
 func (ctx *NixContext) GetMachines(deploymentPath string) (deployment Deployment, err error) {
 
-	args := []string{"--eval", ctx.EvalMachines,
-		"--attr", "info.deployment",
+	args := []string{"eval",
+		"-f", ctx.EvalMachines, "info.deployment",
 		"--arg", "networkExpr", deploymentPath,
-		"--json", "--strict"}
+		"--json"}
 
 	if ctx.ShowTrace {
 		args = append(args, "--show-trace")
 	}
 
-	cmd := exec.Command("nix-instantiate", args...)
+	cmd := exec.Command("nix", args...)
 
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
@@ -225,7 +225,7 @@ func (ctx *NixContext) GetMachines(deploymentPath string) (deployment Deployment
 	err = cmd.Run()
 	if err != nil {
 		errorMessage := fmt.Sprintf(
-			"Error while running `nix-instantiate ..`: %s", err.Error(),
+			"Error while running `nix eval ..`: %s", err.Error(),
 		)
 		return deployment, errors.New(errorMessage)
 	}
@@ -405,8 +405,9 @@ func Push(ctx *ssh.SSHContext, host Host, paths ...string) (err error) {
 	options := mkOptions(host)
 	for _, path := range paths {
 		args := []string{
-			"--to", userArg + host.TargetHost + keyArg,
+			"copy",
 			path,
+			"--to", "ssh://" + userArg + host.TargetHost + keyArg,
 		}
 		args = append(args, options...)
 		if host.SubstituteOnDestination {
@@ -414,7 +415,7 @@ func Push(ctx *ssh.SSHContext, host Host, paths ...string) (err error) {
 		}
 
 		cmd := exec.Command(
-			"nix-copy-closure", args...,
+			"nix", args...,
 		)
 		cmd.Env = env
 
