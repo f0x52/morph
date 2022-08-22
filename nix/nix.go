@@ -279,11 +279,13 @@ func (ctx *NixContext) BuildMachines(deploymentPath string, hosts []Host, nixArg
 		resultLinkPath = filepath.Join(tmpdir, "result")
 	}
 	args := []string{
-		ctx.EvalMachines,
+		"build",
+		"-f", ctx.EvalMachines,
+		"-v",
 		"--arg", "networkExpr", deploymentPath,
 		"--argstr", "argsFile", argsFile,
 		"--out-link", resultLinkPath,
-		"--attr", "machines",
+		"machines",
 	}
 
 	args = append(args, mkOptions(hosts[0])...)
@@ -312,10 +314,10 @@ func (ctx *NixContext) BuildMachines(deploymentPath string, hosts []Host, nixArg
 
 	var cmd *exec.Cmd
 	if ctx.AllowBuildShell && buildShell != nil {
-		shellArgs := strings.Join(append([]string{"nix-build"}, args...), " ")
-		cmd = exec.Command("nix-shell", *buildShell, "--pure", "--run", shellArgs)
+		shellArgs := strings.Join(append([]string{"nix"}, args...), " ")
+		cmd = exec.Command("nix-shell", *buildShell, "--run", shellArgs)
 	} else {
-		cmd = exec.Command("nix-build", args...)
+		cmd = exec.Command("nix", args...)
 	}
 
 	// show process output on attached stdout/stderr
