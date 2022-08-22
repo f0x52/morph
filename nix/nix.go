@@ -411,7 +411,7 @@ func Push(ctx *ssh.SSHContext, host Host, paths ...string) (err error) {
 		}
 		args = append(args, options...)
 		if host.SubstituteOnDestination {
-			args = append(args, "--use-substitutes")
+			args = append(args, "--substitute-on-destination")
 		}
 
 		cmd := exec.Command(
